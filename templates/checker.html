@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>ИИ-Проверка документов</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; margin: 0; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .header { background-color: #1e3a8a; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-radius: 8px 8px 0 0; }
+        .header a { color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 4px; font-weight: bold; }
+        .content { background: white; padding: 30px; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .card { border: 1px solid #e5e7eb; padding: 20px; border-radius: 6px; background: #f9fafb; margin-bottom: 20px; }
+        input[type="file"] { width: 100%; padding: 10px; border: 1px dashed #ccc; border-radius: 4px; box-sizing: border-box; margin-bottom: 15px; }
+        button { background: #ea580c; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
+        button:hover { background: #c2410c; }
+        .result-box { margin-top: 20px; padding: 20px; background: #fff7ed; border: 1px solid #fdba74; border-radius: 4px; color: #431407; white-space: pre-wrap; line-height: 1.6; }
+        .btn-download { display: inline-block; margin-top: 15px; background: #1e3a8a; color: white; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; font-size: 14px; }
+        .btn-download:hover { background: #15306b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>🔍 ИИ-Ревизор (Проверка документов)</h2>
+            <a href="/">← На главную</a>
+        </div>
+        <div class="content">
+            <div class="card">
+                <h3>Загрузите скан или фото документа</h3>
+                <p>ИИ прочитает документ и найдет юридические ошибки, пропущенные пункты и риски.</p>
+                <form method="post" action="/api/check_doc" enctype="multipart/form-data">
+                    <input type="file" name="file" accept="image/*" required>
+                    <button type="submit">🔍 Проверить документ</button>
+                </form>
+            </div>
+            
+            {% if result %}
+            <div class="result-box">
+                <h4>Заключение ИИ-Ревизора:</h4>
+                {{ result }}
+            </div>
+            <a href="/download_checker_report" class="btn-download">⬇️ Скачать отчет в Word</a>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

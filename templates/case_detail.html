@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Дело {{ case.number }}</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; display: flex; gap: 20px; }
+        .left-panel { flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); height: fit-content; }
+        .right-panel { flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; height: 80vh; }
+        .header { background: #1e3a8a; color: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .header a { color: white; text-decoration: none; font-weight: bold; background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 4px; }
+        
+        /* Карточка клиента */
+        .client-card { background: #f9fafb; border: 1px solid #e5e7eb; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
+        .client-card h3 { margin-top: 0; color: #1e3a8a; }
+        .client-card p { margin: 8px 0; font-size: 15px; }
+        
+        /* Кнопки документов */
+        .btn-group { display: flex; flex-direction: column; gap: 10px; }
+        .btn-doc { background: #8b5cf6; color: white; text-align: center; text-decoration: none; padding: 10px; border-radius: 4px; font-weight: bold; }
+        .btn-doc:hover { background: #7c3aed; }
+        
+        /* Чат */
+        .chat-box { flex: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; margin-bottom: 10px; }
+        .message { max-width: 85%; padding: 10px; border-radius: 6px; font-size: 14px; line-height: 1.4; white-space: pre-wrap; }
+        .user-message { background: #e0f2fe; align-self: flex-end; }
+        .ai-message { background: white; border: 1px solid #e5e7eb; align-self: flex-start; }
+        .chat-input { display: flex; gap: 10px; }
+        .chat-input input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .chat-input button { background: #1e3a8a; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Левая панель: Данные и Кнопки -->
+        <div class="left-panel">
+            <h2>📂 Дело № {{ case.number }}</h2>
+            <p style="color: #666;">{{ case.description }} | {{ case.date }}</p>
+            
+            <div class="client-card">
+                <h3>👤 Клиент (Наследник)</h3>
+                <p><b>ФИО:</b> {{ case.client_name }}</p>
+                <p><b>Паспорт:</b> {{ case.series }} {{ case.number_pass }}</p>
+                {% if case.phone %}<p><b>Телефон:</b> {{ case.phone }}</p>{% endif %}
+                {% if case.email %}<p><b>Email:</b> {{ case.email }}</p>{% endif %}
+            </div>
+
+            <h3>🛠 Действия</h3>
+            <div class="btn-group">
+                <form method="post" action="/generate_case_doc/{{ case.id }}">
+                    <select name="doc_type" style="width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc;">
+                        <option value="Запрос в Росреестр">Запрос в Росреестр</option>
+                        <option value="Запрос в банк">Запрос в банк</option>
+                        <option value="Извещение наследнику">Извещение наследнику</option>
+                        <option value="Согласие на обработку данных">Согласие на обработку</option>
+                    </select>
+                    <button type="submit" class="btn-doc" style="width: 100%; border: none; cursor: pointer;">✨ Сгенерировать документ</button>
+                </form>
+                <a href="/cases" class="btn-doc" style="background: #64748b;">← Назад к реестру</a>
+            </div>
+        </div>
+
+        <!-- Правая панель: ИИ-Помощник по делу -->
+        <div class="right-panel">
+            <h3 style="margin-top:0;">🤖 Личный ИИ-Помощник по делу</h3>
+            <p style="font-size: 12px; color: #666; margin-top: 0;">ИИ уже знает ФИО и паспорт клиента.</p>
+            <div class="chat-box" id="chatBox">
+                <div class="message ai-message">Здравствуйте! Я готов помочь с делом №{{ case.number }}. Спросите меня о чем-нибудь или попросите составить документ.</div>
+            </div>
+            <form class="chat-input" id="chatForm">
+                <input type="text" id="userInput" placeholder="Например: Какой запрос направить в банк?" required autocomplete="off">
+                <button type="submit">Отправить</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const chatForm = document.getElementById('chatForm');
+        const userInput = document.getElementById('userInput');
+        const chatBox = document.getElementById('chatBox');
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = userInput.value.trim();
+            if (!text) return;
+            chatBox.innerHTML += `<div class="message user-message">${text}</div>`;
+            userInput.value = '';
+            
+            const loading = document.createElement('div');
+            loading.className = 'message ai-message';
+            loading.textContent = 'ИИ печатает...';
+            loading.id = 'loadIndicator';
+            chatBox.appendChild(loading);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                const response = await fetch('/api/case_chat/{{ case.id }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+                const data = await response.json();
+                document.getElementById('loadIndicator').remove();
+                chatBox.innerHTML += `<div class="message ai-message">${data.response}</div>`;
+            } catch (error) {
+                document.getElementById('loadIndicator').remove();
+                chatBox.innerHTML += `<div class="message ai-message" style="color:red;">Ошибка сети.</div>`;
+            }
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+    </script>
+</body>
+</html>

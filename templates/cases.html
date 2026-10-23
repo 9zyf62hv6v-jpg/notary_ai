@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Реестр дел</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 20px; }
+        .container { max-width: 1100px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .nav { margin-bottom: 20px; }
+        .nav a { margin-right: 15px; color: #1e3a8a; font-weight: bold; text-decoration: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px;}
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+        th { background-color: #1e3a8a; color: white; }
+        .card { border: 1px solid #e5e7eb; padding: 15px; border-radius: 6px; background: #f9fafb; margin-bottom: 20px; }
+        input, select { padding: 8px; margin: 5px 0; border-radius: 4px; border: 1px solid #ccc; width: 100%; box-sizing: border-box;}
+        button { background: #0284c7; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px;}
+        button:hover { background: #0369a1; }
+        .btn-zip { background: #16a34a; display: block; text-align: center; text-decoration: none; color: white; padding: 8px; border-radius: 4px; font-weight: bold; margin-top: 10px; font-size: 13px;}
+        .btn-zip:hover { background: #15803d; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <a href="/">← На главную</a>
+            <a href="/journal">Клиенты</a>
+        </div>
+        <h2>📂 Реестр наследственных дел</h2>
+        
+        <div class="card">
+            <h3>Создать новое дело</h3>
+            <form method="post" action="/create_case">
+                <label>Клиент:</label>
+                <select name="client_id" required>
+                    {% for client in clients %}
+                    <option value="{{ client[0] }}">{{ client[1] }}</option>
+                    {% endfor %}
+                </select>
+                <label>Номер дела:</label>
+                <input type="text" name="case_number" required placeholder="Например: 12-2026">
+                <label>Суть дела:</label>
+                <input type="text" name="description" required placeholder="Например: Наследование квартиры">
+                <button type="submit">Создать дело</button>
+            </form>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Номер дела</th>
+                    <th>Клиент</th>
+                    <th>Суть</th>
+                    <th>Дата</th>
+                    <th>Действия ИИ (Рутина)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for case in cases %}
+                <tr>
+                    <td>{{ case[0] }}</td>
+                    <td><a href="/case/{{ case[0] }}" style="color: #1e3a8a; font-weight: bold; text-decoration: underline;">{{ case[1] }}</a></td>
+                    <td>{{ case[2] }}</td>
+                    <td>{{ case[3] }}</td>
+                    <td>{{ case[5][:10] }}</td>
+                    <td>
+                        <!-- Кнопка скачивания всего пакета в ZIP -->
+                        <a href="/download_case_zip/{{ case[0] }}" class="btn-zip">📦 Скачать весь пакет (ZIP)</a>
+
+                        <!-- Анализ ЕГРН -->
+                        <form method="post" action="/analyze_egrn/{{ case[0] }}" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:5px; margin-top: 15px; background: #fff7ed; padding: 10px; border-radius: 6px; border: 1px solid #fed7aa;">
+                            <span style="font-size:12px; font-weight:bold; color:#c2410c;">Разбор выписки:</span>
+                            <input type="file" name="file" accept="image/*" required style="font-size: 12px; padding: 4px;">
+                            <button type="submit" style="background: #ea580c; padding: 6px; font-size: 12px; margin-top:0;">🏠 Анализ ЕГРН</button>
+                        </form>
+                        
+                        <!-- Генерация одного документа -->
+                        <form method="post" action="/generate_ai_doc" style="display:flex; flex-direction:column; gap:5px; margin-top: 10px; background: #f5f3ff; padding: 10px; border-radius: 6px; border: 1px solid #ddd6fe;">
+                            <span style="font-size:12px; font-weight:bold; color:#6d28d9;">Один документ:</span>
+                            <input type="hidden" name="client_id" value="{{ case[6] }}">
+                            <select name="doc_type" style="width: 100%; padding: 4px; font-size: 12px;">
+                                <option value="Запрос в Росреестр">Запрос в Росреестр</option>
+                                <option value="Запрос в банк">Запрос в банк</option>
+                                <option value="Извещение наследнику">Извещение</option>
+                            </select>
+                            <button type="submit" style="background: #8b5cf6; padding: 6px; font-size: 12px; margin-top:0;">✨ Сгенерировать</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

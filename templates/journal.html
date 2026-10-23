@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Журнал клиентов</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        th { background-color: #1e3a8a; color: white; }
+        .btn { display: inline-block; padding: 10px 15px; background: #1e3a8a; color: white; text-decoration: none; border-radius: 4px; margin-bottom: 20px; font-weight: bold; }
+        .btn-doc { background: #0284c7; padding: 6px 12px; font-size: 14px; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;}
+        .btn-doc:hover { background: #0369a1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="btn">← Назад к рабочей панели</a>
+        <h2>📁 Журнал клиентов</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>ФИО</th>
+                    <th>Паспорт</th>
+                    <th>Контакты</th>
+                    <th>Дата добавления</th>
+                    <th>Действие</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for client in clients %}
+                <tr>
+                    <td>{{ client[0] }}</td>
+                    <td>{{ client[1] }}</td>
+                    <td>{{ client[2] }} {{ client[3] }}</td>
+                    <td>
+                        {% if client[4] %}{{ client[4] }}<br>{% endif %}
+                        {% if client[5] %}{{ client[5] }}{% endif %}
+                    </td>
+                    <td>{{ client[6][:16] if client[6] else 'Нет данных' }}</td>
+                    <td><a href="/download_docx/{{ client[0] }}" class="btn-doc">⬇️ Скачать .docx</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if not clients %}
+        <p style="text-align: center; color: #666; margin-top: 30px;">Пока нет сохраненных клиентов.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

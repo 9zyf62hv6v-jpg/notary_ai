@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>ИИ-Консультант</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .chat-container { max-width: 800px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; height: 85vh; }
+        .chat-header { background: #1e3a8a; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .chat-header div { display: flex; gap: 10px; }
+        .chat-header a, .chat-header button { color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 4px; font-size: 14px; border: none; cursor: pointer; font-family: inherit;}
+        .chat-header a:hover, .chat-header button:hover { background: rgba(255,255,255,0.3); }
+        .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .message { max-width: 80%; padding: 12px 16px; border-radius: 8px; font-size: 15px; line-height: 1.5; }
+        .user-message { background: #e0f2fe; color: #0369a1; align-self: flex-end; border-bottom-right-radius: 0; }
+        .ai-message { background: #f3f4f6; color: #333; align-self: flex-start; border-bottom-left-radius: 0; white-space: pre-wrap; }
+        .chat-input { display: flex; padding: 15px; border-top: 1px solid #eee; background: #fafafa; }
+        .chat-input input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; outline: none; }
+        .chat-input button { background: #1e3a8a; color: white; border: none; padding: 12px 25px; margin-left: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px; }
+        .chat-input button:hover { background: #15306b; }
+        .loading { font-style: italic; color: #666; font-size: 14px; align-self: flex-start; }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h3 style="margin:0;">⚖️ ИИ-Юрист (Консультант)</h3>
+            <div>
+                <button onclick="clearChat()">🗑️ Очистить чат</button>
+                <a href="/">← На главную</a>
+            </div>
+        </div>
+        <div class="chat-box" id="chatBox">
+            <!-- Сообщения будут загружаться сюда через JS -->
+        </div>
+        <form class="chat-input" id="chatForm">
+            <input type="text" id="userInput" placeholder="Например: Какие документы нужны для оформления наследства?" required autocomplete="off">
+            <button type="submit">Отправить</button>
+        </form>
+    </div>
+
+    <script>
+        const chatForm = document.getElementById('chatForm');
+        const userInput = document.getElementById('userInput');
+        const chatBox = document.getElementById('chatBox');
+
+        // Начальное приветствие
+        const initialGreeting = {
+            role: 'ai',
+            text: 'Здравствуйте! Я ваш ИИ-помощник. Задайте любой вопрос по нотариальному делопроизводству или законодательству РФ. Я работаю локально, данные никуда не уходят.'
+        };
+
+        // Загружаем историю из LocalStorage или создаем новую
+        let chatHistory = JSON.parse(localStorage.getItem('notary_chat_history'));
+        if (!chatHistory || chatHistory.length === 0) {
+            chatHistory = [initialGreeting];
+            saveHistory();
+        }
+
+        // Функция сохранения в LocalStorage
+        function saveHistory() {
+            localStorage.setItem('notary_chat_history', JSON.stringify(chatHistory));
+        }
+
+        // Функция отрисовки сообщений
+        function renderChat() {
+            chatBox.innerHTML = ''; // Очищаем экран
+            chatHistory.forEach(msg => {
+                const div = document.createElement('div');
+                div.className = `message ${msg.role === 'user' ? 'user-message' : 'ai-message'}`;
+                div.textContent = msg.text; // textContent безопаснее, чем innerHTML
+                chatBox.appendChild(div);
+            });
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Функция очистки чата
+        function clearChat() {
+            if(confirm('Вы уверены, что хотите удалить историю чата?')) {
+                chatHistory = [initialGreeting];
+                saveHistory();
+                renderChat();
+            }
+        }
+
+        // Первичная отрисовка при загрузке страницы
+        renderChat();
+
+        // Обработка отправки сообщения
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            // 1. Добавляем сообщение пользователя в историю и на экран
+            chatHistory.push({ role: 'user', text: text });
+            saveHistory();
+            renderChat();
+            userInput.value = '';
+            
+            // 2. Добавляем индикатор загрузки (он не сохраняется в историю)
+            const loadingMsg = document.createElement('div');
+            loadingMsg.className = 'loading';
+            loadingMsg.id = 'loadingIndicator';
+            loadingMsg.textContent = 'ИИ печатает... (локальная модель думает)';
+            chatBox.appendChild(loadingMsg);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+                const data = await response.json();
+                
+                // Убираем индикатор загрузки
+                const loader = document.getElementById('loadingIndicator');
+                if (loader) loader.remove();
+
+                // 3. Добавляем ответ ИИ в историю и на экран
+                chatHistory.push({ role: 'ai', text: data.response });
+                saveHistory();
+                renderChat();
+
+            } catch (error) {
+                const loader = document.getElementById('loadingIndicator');
+                if (loader) loader.remove();
+                chatHistory.push({ role: 'ai', text: 'Ошибка сети. Убедитесь, что Ollama запущена.' });
+                saveHistory();
+                renderChat();
+            }
+        });
+    </script>
+</body>
+</html>

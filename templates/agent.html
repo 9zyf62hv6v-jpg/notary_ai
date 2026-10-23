@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>AI-Агент (Мультизадачный)</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; margin: 0; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .header { background-color: #1e3a8a; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-radius: 8px 8px 0 0; margin: -30px -30px 20px -30px; }
+        .header a { color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 4px; font-weight: bold; }
+        textarea { width: 100%; padding: 15px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit; font-size: 16px; min-height: 100px; resize: vertical; }
+        button { background: #10b981; color: white; border: none; padding: 15px 20px; font-size: 18px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
+        button:hover { background: #059669; }
+        button:disabled { background: #9ca3af; cursor: not-allowed; }
+        .result-box { margin-top: 20px; padding: 20px; background: #f0fdf4; border: 1px solid #86efac; border-radius: 4px; color: #166534; line-height: 1.6;}
+        .log-title { font-weight: bold; margin-bottom: 10px; font-size: 18px; color: #065f46; }
+        .loading-text { display: none; text-align: center; color: #1e3a8a; font-weight: bold; margin-top: 15px; font-size: 16px;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>🤖 AI-Агент (Мультизадачный)</h2>
+            <a href="/">← На главную</a>
+        </div>
+        
+        <p>Напишите агенту сложную задачу. Он сам составит план и выполнит его. (Например: <i>"Посчитай пошлину за квартиру 5 млн для близкого родственника и создай документ с результатом"</i>).</p>
+        
+        <form method="post" action="/api/agent_execute" id="agentForm">
+            <textarea name="task" required placeholder="Напиши задачу для агента...">{{ task if task else '' }}</textarea>
+            <button type="submit" id="submitBtn">🚀 Запустить Агента</button>
+            <div class="loading-text" id="loadingText">⏳ Агент выполняет план... Пожалуйста, подождите (это может занять до 1-2 минут).</div>
+        </form>
+
+        {% if result %}
+        <div class="result-box">
+            <div class="log-title">📋 Отчет о выполнении:</div>
+            {{ result | safe }}
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Показываем надпись "Загрузка" при отправке формы
+        document.getElementById('agentForm').addEventListener('submit', function() {
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitBtn').innerText = '⏳ Выполняю...';
+            document.getElementById('loadingText').style.display = 'block';
+        });
+    </script>
+</body>
+</html>

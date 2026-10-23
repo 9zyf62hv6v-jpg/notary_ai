@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Нотариальный ИИ-Ассистент</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 0; color: #333; }
+        
+        /* Исправленная шапка */
+        .header { background-color: #1e3a8a; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .header h2 { margin: 0; font-size: 20px; }
+        .header-buttons { display: flex; gap: 10px; }
+        .header a { color: white; text-decoration: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; font-size: 14px; }
+        .btn-purple { background: #8b5cf6; }
+        .btn-purple:hover { background: #7c3aed; }
+        .btn-blue { background: #0284c7; }
+        .btn-blue:hover { background: #0369a1; }
+        
+        /* Контейнер по центру */
+        .container { max-width: 800px; margin: 30px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h1 { margin-top: 0; }
+        .module-card { border: 1px solid #e5e7eb; padding: 20px; border-radius: 6px; margin-bottom: 20px; background-color: #f9fafb; }
+        
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+        input[type="number"], input[type="file"], input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; background: white; }
+        button { background-color: #1e3a8a; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; }
+        button:hover { background-color: #15306b; }
+        
+        .result-box { margin-top: 20px; padding: 15px; background-color: #dcfce7; border: 1px solid #86efac; border-radius: 4px; color: #166534; font-size: 16px; text-align: center; }
+        .ocr-text { text-align: left; white-space: pre-wrap; font-family: monospace; font-size: 14px; background: white; padding: 10px; border: 1px solid #86efac; margin-top: 10px; max-height: 200px; overflow-y: auto;}
+    </style>
+</head>
+<body>
+    <!-- Шапка -->
+    <div class="header">
+        <h2>⚖️ Нотариальный ИИ-Ассистент</h2>
+        <div class="header-buttons">
+            <a href="/agent" class="btn-orange" style="background: #10b981;">🤖 AI-Агент (Автопилот)</a>
+            <a href="/checker" class="btn-orange" style="background: #ea580c;">🔍 ИИ-Ревизор</a>    
+            <a href="/chat" style="background: #10b981;">💬 ИИ-Юрист</a>
+            <a href="/cases" class="btn-purple">📂 Дела</a>
+            <a href="/journal" class="btn-blue">📁 Журнал клиентов</a>
+        </div>
+    </div>
+
+    <!-- Основной контент -->
+    <div class="container">
+        <h1>Рабочая панель</h1>
+                <!-- Новая карточка свободной генерации -->
+        <div class="module-card" style="border-color: #a78bfa;">
+            <h3>✨ ИИ-Секретарь (Свободная генерация)</h3>
+            <p>Опишите словами, какой документ вам нужен, и ИИ напишет его за вас.</p>
+            <form method="post" action="/generate_custom_doc">
+                <div class="form-group">
+                    <textarea name="task_description" required placeholder="Например: Составь заявление от Иванова И.И. на выдачу свидетельства о праве на наследство на автомобиль..." style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; font-size: 16px; min-height: 80px; resize: vertical;"></textarea>
+                </div>
+                <button type="submit" style="background-color: #8b5cf6;">✨ Сгенерировать Word</button>
+            </form>
+        </div>
+        <div class="module-card">
+            <h3>🧮 Калькулятор госпошлины</h3>
+            <form method="post" action="/calculate_duty">
+                <div class="form-group">
+                    <label>Стоимость наследственного имущества (руб.):</label>
+                    <input type="number" name="estate_value" step="0.01" required placeholder="Например: 1500000">
+                </div>
+                <div class="form-group">
+                    <label>Степень родства наследника:</label>
+                    <select name="kinship">
+                        <option value="close">Близкий родственник (0.3%)</option>
+                        <option value="other">Другие лица (0.6%)</option>
+                    </select>
+                </div>
+                <button type="submit">Рассчитать пошлину</button>
+            </form>
+            {% if duty_result %}<div class="result-box">Госпошлина составляет: {{ duty_result }} руб.</div>{% endif %}
+        </div>
+
+        <div class="module-card">
+            <h3>🧩 Калькулятор обязательной доли</h3>
+            <form method="post" action="/calculate_mandatory_share">
+                <div class="form-group">
+                    <label>Общее количество наследников по закону:</label>
+                    <input type="number" name="total_heirs" min="1" required placeholder="Например: 3">
+                </div>
+                <button type="submit">Рассчитать долю</button>
+            </form>
+            {% if share_result %}<div class="result-box">Обязательная доля составляет: {{ share_result }}</div>{% endif %}
+        </div>
+
+        <div class="module-card">
+            <h3>📄 Распознавание документов (ИИ)</h3>
+            <form method="post" action="/upload_passport" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label>Выберите изображение:</label>
+                    <input type="file" name="file" accept="image/*" required>
+                </div>
+                <button type="submit">Распознать текст</button>
+            </form>
+            
+            {% if ocr_result %}
+            <div class="result-box">
+                {% if passport_data %}
+                <div style="text-align: left; margin-bottom: 15px; padding: 15px; background: #e0f2fe; border: 1px solid #7dd3fc; border-radius: 4px;">
+                    <h4 style="margin: 0 0 10px 0; color: #0369a1;">✨ Найденные данные (проверьте):</h4>
+                    <form method="post" action="/save_client">
+                        <div class="form-group">
+                            <label>ФИО клиента (введите вручную):</label>
+                            <input type="text" name="full_name" required placeholder="Иванов Иван Иванович">
+                        </div>
+                        <p style="margin: 5px 0; font-size: 16px;"><b>Серия:</b> {{ passport_data.series }} 
+                           <input type="hidden" name="series" value="{{ passport_data.series }}"></p>
+                        <p style="margin: 5px 0; font-size: 16px;"><b>Номер:</b> {{ passport_data.number }}
+                           <input type="hidden" name="number" value="{{ passport_data.number }}"></p>
+                        <button type="submit" style="background-color: #0284c7; margin-top: 10px;">💾 Сохранить в журнал</button>
+                    </form>
+                </div>
+                {% endif %}
+                
+                <div style="text-align: left; font-size: 14px; margin-bottom: 5px;"><b>Весь распознанный текст:</b></div>
+                <div class="ocr-text">{{ ocr_result }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+</body>
+</html>
